@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.Positive;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/channel")
@@ -74,7 +73,7 @@ public class ChannelController
     {
         var newChannel = channelService.create(mapper.map(channelDTO, Channel.class));
 
-        return ResponseEntity.created(ResourceLocationHelper.getResourceLocation(Map.of("id", newChannel.getId())))
+        return ResponseEntity.created(ResourceLocationHelper.getResourceLocation("{id}", newChannel.getId()))
                              .body(newChannel);
     }
 
@@ -87,8 +86,8 @@ public class ChannelController
      */
     @PutMapping("/{id}")
     @ResponseBody
-    @ResponseStatus(value = HttpStatus.CREATED)
-    public Channel createChannel(@Positive @PathVariable Long id, @RequestBody ChannelDTO channelDTO)
+    @ResponseStatus(value = HttpStatus.OK)
+    public Channel updateChannel(@Positive @PathVariable Long id, @RequestBody ChannelDTO channelDTO)
     {
         return channelService.update(id, mapper.map(channelDTO, Channel.class));
     }
