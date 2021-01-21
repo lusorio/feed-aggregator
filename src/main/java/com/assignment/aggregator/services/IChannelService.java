@@ -59,10 +59,9 @@ public interface IChannelService
     void delete(long channelId);
 
     /**
-     * Updates a {@link Channel} last refresh time when fetched
+     * Updates a {@link Channel} last refresh time
      *
-     * @param channel the {@link Channel} to update
-     * @return the updated {@link Channel}
+     * @param channelId the id of the {@link Channel} to update
      */
-    Channel updateRefreshTime(Channel channel);
+    void updateRefreshTime(long channelId);
 }

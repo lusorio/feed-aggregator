@@ -6,12 +6,15 @@ import com.assignment.aggregator.exceptions.DuplicatedChannelException;
 import com.assignment.aggregator.models.Channel;
 import com.assignment.aggregator.repositories.IChannelRepository;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
+import java.text.MessageFormat;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -20,6 +23,8 @@ import java.util.List;
 @Validated
 public class ChannelService implements IChannelService
 {
+    private static final Logger logger = LoggerFactory.getLogger(ChannelService.class);
+
     private final IChannelRepository channelRepository;
 
     private final IFeedClient feedClient;
@@ -61,11 +66,13 @@ public class ChannelService implements IChannelService
         if (StringUtils.isBlank(channel.getName()))
         {
             channel.setName(feed.getTitle());
+            if (logger.isInfoEnabled())
+            {
+                logger.info(MessageFormat.format("Channel name not set. Using SyndFeed title: {0}", feed.getTitle()));
+            }
         }
 
         channelRepository.save(channel);
-
-        channel.setLastRefresh(ZonedDateTime.now());
 
         return channel;
     }
@@ -77,13 +84,25 @@ public class ChannelService implements IChannelService
                                        .orElseThrow(() -> new ChannelNotFoundException(channelId));
 
         // channel URL can't be modified
+        if (logger.isInfoEnabled())
+        {
+            logger.info("Updating channel. Channel URL can't be modified");
+        }
 
         if (StringUtils.isNotBlank(updatedChannel.getName()))
         {
             channel.setName(updatedChannel.getName());
+            if (logger.isInfoEnabled())
+            {
+                logger.info(MessageFormat.format("Updating name to : {0}", channel.getName()));
+            }
         }
 
         channel.setTtl(updatedChannel.getTtl());
+        if (logger.isInfoEnabled())
+        {
+            logger.info(MessageFormat.format("Updating TTL to : {0}", channel.getTtl()));
+        }
 
         return channelRepository.save(channel);
     }
@@ -100,9 +119,13 @@ public class ChannelService implements IChannelService
     }
 
     @Override
-    public Channel updateRefreshTime(Channel channel)
+    public void updateRefreshTime(long channelId)
     {
-        channel.setLastRefresh(ZonedDateTime.now());
-        return channelRepository.save(channel);
+        channelRepository.updateRefreshTime(channelId, ZonedDateTime.now());
+
+        if (logger.isInfoEnabled())
+        {
+            logger.info(MessageFormat.format("Refreshing channel last update time TTL. Channel id: {0}", channelId));
+        }
     }
 }

@@ -4,10 +4,13 @@ import com.assignment.aggregator.client.IFeedClient;
 import com.assignment.aggregator.models.Channel;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.MessageFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZonedDateTime;
@@ -20,6 +23,8 @@ import java.util.stream.Collectors;
 @Transactional
 public class FeedService implements IFeedService
 {
+    private static final Logger logger = LoggerFactory.getLogger(FeedService.class);
+
     private final IChannelService channelService;
 
     private final IFeedClient feedClient;
@@ -40,7 +45,12 @@ public class FeedService implements IFeedService
             var entries = this.feedClient.fetch(channel.getUrl())
                                          .getEntries();
 
-            channelService.updateRefreshTime(channel);
+            if (logger.isInfoEnabled())
+            {
+                logger.info(MessageFormat.format("Fetching channel {0}. Force refresh set to {1}", channelId, forceRefresh));
+            }
+
+            channelService.updateRefreshTime(channel.getId());
 
             return entries;
         }
@@ -65,6 +75,11 @@ public class FeedService implements IFeedService
                                                                  .map(CompletableFuture::join)
                                                                  .collect(Collectors.toList()));
 
+        if (logger.isInfoEnabled())
+        {
+            logger.info(MessageFormat.format("Aggregating {0} channels. Force refresh set to {1}", feedFutures.size(), forceRefresh));
+        }
+
         allFeedFuture.join().forEach(f -> entries.addAll(f.getEntries()));
 
         return entries;
@@ -79,7 +94,7 @@ public class FeedService implements IFeedService
     @Async("asyncExecutor")
     CompletableFuture<SyndFeed> fetchFeedEntriesAsync(Channel channel)
     {
-        channelService.updateRefreshTime(channel);
+        channelService.updateRefreshTime(channel.getId());
         return CompletableFuture.supplyAsync(() -> this.feedClient.fetch(channel.getUrl()));
     }
 
@@ -90,9 +105,9 @@ public class FeedService implements IFeedService
      * @param lastRefreshedOn the date of the latest channel's refresh
      * @return <code>true</code> if the channel's TTL has expired or <code>false</code> otherwise
      */
-    private boolean isRefreshNeeded(long ttl, ZonedDateTime lastRefreshedOn)
+    private boolean isRefreshNeeded(Integer ttl, ZonedDateTime lastRefreshedOn)
     {
-        if (lastRefreshedOn == null)
+        if (ttl == null || lastRefreshedOn == null)
         {
             return true;
         }
