@@ -1,4 +1,4 @@
-package com.assignment.aggregator.exceptions.exceptionhabdler;
+package com.assignment.aggregator.exceptions.exceptionhandler;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.apache.commons.lang3.builder.EqualsBuilder;
