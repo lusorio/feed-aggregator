@@ -7,5 +7,3 @@ CREATE TABLE IF NOT EXISTS channel (
     created TIMESTAMP NOT NULL,
     updated TIMESTAMP NULL DEFAULT NULL
 );
-
-CREATE INDEX url_UNIQUE ON channel(url);
