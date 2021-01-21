@@ -25,14 +25,6 @@ public class Mapper<E, D> implements IMapper<E, D>
     }
 
     @Override
-    public List<E> map(Collection<D> source, Class<E> destinationType)
-    {
-        return source.stream()
-                     .map(p -> this.map(p, destinationType))
-                     .collect(Collectors.toList());
-    }
-
-    @Override
     public D mapToDTO(E source, Class<D> destinationType)
     {
         return modelMapper.map(source, destinationType);

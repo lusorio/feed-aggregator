@@ -27,15 +27,6 @@ public interface IMapper<E, D>
     E map(D source, Class<E> destinationType);
 
     /**
-     * Map DTO to an entity.
-     *
-     * @param source          the list of DTO to convert
-     * @param destinationType the destination class type of the entity
-     * @return the list of entities
-     */
-    List<E> map(Collection<D> source, Class<E> destinationType);
-
-    /**
      * Map an entity to a DTO.
      *
      * @param source          the entity to convert
