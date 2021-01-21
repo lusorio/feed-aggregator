@@ -5,6 +5,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
 import javax.validation.constraints.Size;
 import java.time.ZonedDateTime;
@@ -26,10 +27,12 @@ public class Channel
 
     @Column(name = "url", nullable = false, unique = true)
     @Size(max = 2048)
+    @NotNull
     private String url;
 
     @Column(name = "ttl", nullable = false)
     @PositiveOrZero
+    @NotNull
     private Integer ttl;
 
     @Column(name = "last_refresh")
@@ -158,7 +161,9 @@ public class Channel
         Channel channel = (Channel) o;
 
         return new EqualsBuilder()
-                       .append(url, channel.url)
+                       .append(getName(), channel.getName())
+                       .append(getUrl(), channel.getUrl())
+                       .append(getTtl(), channel.getTtl())
                        .isEquals();
     }
 
@@ -166,7 +171,9 @@ public class Channel
     public int hashCode()
     {
         return new HashCodeBuilder(17, 37)
-                       .append(url)
+                       .append(getName())
+                       .append(getUrl())
+                       .append(getTtl())
                        .toHashCode();
     }
 
