@@ -5,8 +5,7 @@ import com.rometools.rome.feed.synd.SyndFeed;
 /**
  * Web syndication client
  * <p>
- * Implementation of a feed client using the ROME library (https://rometools.github.io/rome/). Fetch a valid
- * RSS/ATOM source from a given URL
+ * Implementation of a feed client using the ROME library (https://rometools.github.io/rome/)
  *
  * @see "https://rometools.github.io/rome/"
  */
