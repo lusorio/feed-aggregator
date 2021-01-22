@@ -43,14 +43,19 @@ aggregating channels, if a given channel's TTL has not yet expired, it won't be 
     
     ./gradlew bootRun
     
- #### Running in a different servlet container
+ #### Running in Docker
  
- * Install the maven project
-     
-     ./gradlew build
-        
- * Deploy the generated .war artifact in the webapps (or equivalent) directory
-         
+ A `Dockerfile` is provided with the project in order to build a Docker container.
+ 
+ * Run `./gradlew build`. This will generate the application's `jar` file under `build/libs/*.jar"`
+ 
+ * Run `docker build -t assignment/aggregator .` to build the Docker image. `assignment/aggreagator` is just a comodity tag name. Use whatever you like to name the application.
+ 
+ * Run the container with `docker run -p 8080:8080 assignment/aggregator`
+ 
+ * The api will be accessible at htt://localhost:8080/api/. You can try to fetch the list of subscriptions with `curl GET http://localhost:8080/api/channel/`
+
+   
  ### Test the application
  
  To run the test suite:
