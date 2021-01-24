@@ -1,7 +1,7 @@
 package com.assignment.aggregator.mappers;
 
 import com.assignment.aggregator.AbstractSpringTest;
-import com.assignment.aggregator.dto.FeedEntryDTO;
+import com.assignment.aggregator.models.FeedEntry;
 import com.rometools.rome.feed.synd.SyndContentImpl;
 import com.rometools.rome.feed.synd.SyndEntryImpl;
 import com.rometools.rome.feed.synd.SyndPersonImpl;
@@ -14,7 +14,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class FeedMapperTest extends AbstractSpringTest
+class FeedEntryMapperTest extends AbstractSpringTest
 {
 
     @InjectMocks
@@ -52,7 +52,7 @@ class FeedMapperTest extends AbstractSpringTest
 
         entry.setContents(List.of(content));
 
-        var result = mapper.mapToDTO(entry, FeedEntryDTO.class);
+        var result = mapper.mapToDTO(entry, FeedEntry.class);
 
         assertAll(
                 () -> assertNotNull(result),
@@ -97,7 +97,7 @@ class FeedMapperTest extends AbstractSpringTest
 
         entry.setContents(List.of(content));
 
-        var result = mapper.mapToDTO(List.of(entry, entry, entry), FeedEntryDTO.class);
+        var result = mapper.mapToDTO(List.of(entry, entry, entry), FeedEntry.class);
 
         assertAll(
                 () -> assertNotNull(result),

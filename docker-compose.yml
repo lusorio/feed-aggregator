@@ -1,0 +1,26 @@
+version: "3"
+
+services:
+  # mongodb for storing feeds
+  mongodb:
+    image: mongo:4.2.0
+    container_name: "aggregator-mongodb"
+    ports:
+      - 27017-27019:27017-27019
+    networks:
+      - aggregator
+
+  # aggregator API
+  api:
+    image: assignment/aggregator
+    container_name: "aggregator-api"
+    ports:
+      - 8080:8080
+    links:
+      - mongodb
+    networks:
+      - aggregator
+
+
+networks:
+  aggregator: {}

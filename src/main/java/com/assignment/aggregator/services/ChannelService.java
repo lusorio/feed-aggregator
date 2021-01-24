@@ -5,6 +5,7 @@ import com.assignment.aggregator.exceptions.ChannelNotFoundException;
 import com.assignment.aggregator.exceptions.DuplicatedChannelException;
 import com.assignment.aggregator.models.Channel;
 import com.assignment.aggregator.repositories.IChannelRepository;
+import com.assignment.aggregator.repositories.IFeedEntryRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,12 +28,15 @@ public class ChannelService implements IChannelService
 
     private final IChannelRepository channelRepository;
 
+    private final IFeedEntryRepository feedEntryRepository;
+
     private final IFeedClient feedClient;
 
-    public ChannelService(IChannelRepository channelRepository, IFeedClient feedClient)
+    public ChannelService(IChannelRepository channelRepository, IFeedClient feedClient, IFeedEntryRepository feedEntryRepository)
     {
         this.channelRepository = channelRepository;
         this.feedClient = feedClient;
+        this.feedEntryRepository = feedEntryRepository;
     }
 
     @Override
@@ -116,6 +120,8 @@ public class ChannelService implements IChannelService
         }
 
         channelRepository.deleteById(channelId);
+        feedEntryRepository.deleteAllByChannelIdIn(List.of(channelId));
+
     }
 
     @Override

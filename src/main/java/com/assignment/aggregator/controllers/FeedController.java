@@ -1,12 +1,10 @@
 package com.assignment.aggregator.controllers;
 
 import com.assignment.aggregator.client.IFeedClient;
-import com.assignment.aggregator.dto.FeedEntryDTO;
 import com.assignment.aggregator.exceptions.exceptionhandler.CustomErrorResponse;
-import com.assignment.aggregator.mappers.IMapper;
 import com.assignment.aggregator.models.Channel;
+import com.assignment.aggregator.models.FeedEntry;
 import com.assignment.aggregator.services.IFeedService;
-import com.rometools.rome.feed.synd.SyndEntry;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -15,7 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Collection;
 
 @RestController
 @RequestMapping("/feed")
@@ -25,18 +23,14 @@ public class FeedController
 {
     private final IFeedService feedService;
 
-    private final IMapper<SyndEntry, FeedEntryDTO> mapper;
-
     /**
      * Implicit constructor injection is used
      *
      * @param feedService service providing aggregation operations
-     * @param mapper      service providing mapping for {@link SyndEntry} entities
      */
-    FeedController(final IFeedService feedService, final IMapper<SyndEntry, FeedEntryDTO> mapper)
+    FeedController(final IFeedService feedService)
     {
         this.feedService = feedService;
-        this.mapper = mapper;
     }
 
     /**
@@ -61,14 +55,14 @@ public class FeedController
     @ResponseStatus(value = HttpStatus.OK)
     @ApiOperation(value = "Fetch a channel",
                   notes = "Fetch the up to date web syndication feed from a subscribed channel",
-                  response = FeedEntryDTO.class,
+                  response = FeedEntry.class,
                   responseContainer = "List")
     @ApiResponses(value = {
             @ApiResponse(code = 404, message = "Channel not found", response = CustomErrorResponse.class)
     })
-    public List<FeedEntryDTO> fetch(@PathVariable("id") long id, @RequestParam(name = "forceRefresh", required = false) boolean forceRefresh)
+    public Collection<FeedEntry> fetch(@PathVariable("id") long id, @RequestParam(name = "forceRefresh", required = false) boolean forceRefresh)
     {
-        return mapper.mapToDTO(feedService.fetch(id, forceRefresh), FeedEntryDTO.class);
+        return feedService.fetch(id, forceRefresh);
     }
 
     /**
@@ -89,10 +83,10 @@ public class FeedController
     @ResponseStatus(value = HttpStatus.OK)
     @ApiOperation(value = "Aggregate channels",
                   notes = "Aggregate the contents of all the subscribed channels.",
-                  response = FeedEntryDTO.class,
+                  response = FeedEntry.class,
                   responseContainer = "List")
-    public List<FeedEntryDTO> aggregate(@RequestParam(name = "forceRefresh", required = false) boolean forceRefresh)
+    public Collection<FeedEntry> aggregate(@RequestParam(name = "forceRefresh", required = false) boolean forceRefresh)
     {
-        return mapper.mapToDTO(feedService.aggregate(forceRefresh), FeedEntryDTO.class);
+        return feedService.aggregate(forceRefresh);
     }
 }

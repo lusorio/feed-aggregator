@@ -7,6 +7,7 @@ import com.assignment.aggregator.exceptions.DuplicatedChannelException;
 import com.assignment.aggregator.exceptions.InvalidChannelException;
 import com.assignment.aggregator.models.Channel;
 import com.assignment.aggregator.repositories.IChannelRepository;
+import com.assignment.aggregator.repositories.IFeedEntryRepository;
 import com.rometools.rome.feed.synd.SyndFeedImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -14,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Optional;
@@ -30,7 +30,10 @@ class ChannelServiceTest extends AbstractSpringTest
     private IFeedClient feedClient;
 
     @Mock
-    private IChannelRepository repository;
+    private IChannelRepository channelRepository;
+
+    @Mock
+    private IFeedEntryRepository feedEntryRepository;
 
     @InjectMocks
     private ChannelService service;
@@ -44,16 +47,17 @@ class ChannelServiceTest extends AbstractSpringTest
         @DisplayName("When there are no channel subscriptions, the service must return an empty list")
         void list_ReturnsEmptyList()
         {
-            when(repository.findAll()).thenReturn(java.util.List.of());
+            when(channelRepository.findAll()).thenReturn(java.util.List.of());
 
             var result = service.list();
 
             assertTrue(result.isEmpty());
 
-            verify(repository, times(1)).findAll();
-            verifyNoMoreInteractions(repository);
+            verify(channelRepository, times(1)).findAll();
+            verifyNoMoreInteractions(channelRepository);
 
             verifyNoInteractions(feedClient);
+            verifyNoInteractions(feedEntryRepository);
         }
 
         @Test
@@ -69,14 +73,15 @@ class ChannelServiceTest extends AbstractSpringTest
                 channels.add(new Channel("name", "url" + i, 0));
             }
 
-            when(repository.findAll()).thenReturn(channels);
+            when(channelRepository.findAll()).thenReturn(channels);
 
             assertEquals(channels, service.list());
 
-            verify(repository, times(1)).findAll();
-            verifyNoMoreInteractions(repository);
+            verify(channelRepository, times(1)).findAll();
+            verifyNoMoreInteractions(channelRepository);
 
             verifyNoInteractions(feedClient);
+            verifyNoInteractions(feedEntryRepository);
         }
     }
 
@@ -88,14 +93,15 @@ class ChannelServiceTest extends AbstractSpringTest
         @DisplayName("A ChannelNotFoundException exception must be thrown if the channel id is unknown")
         void get_ThrowsException_ChannelNotFound()
         {
-            when(repository.findById(anyLong())).thenReturn(Optional.empty());
+            when(channelRepository.findById(anyLong())).thenReturn(Optional.empty());
 
             assertThrows(ChannelNotFoundException.class, () -> service.get(anyLong()));
 
-            verify(repository, times(1)).findById(anyLong());
-            verifyNoMoreInteractions(repository);
+            verify(channelRepository, times(1)).findById(anyLong());
+            verifyNoMoreInteractions(channelRepository);
 
             verifyNoInteractions(feedClient);
+            verifyNoInteractions(feedEntryRepository);
         }
 
         @Test
@@ -104,14 +110,15 @@ class ChannelServiceTest extends AbstractSpringTest
         {
             var channel = new Channel("name", "url", 0);
 
-            when(repository.findById(anyLong())).thenReturn(Optional.of(channel));
+            when(channelRepository.findById(anyLong())).thenReturn(Optional.of(channel));
 
             assertEquals(channel, service.get(anyLong()));
 
-            verify(repository, times(1)).findById(anyLong());
-            verifyNoMoreInteractions(repository);
+            verify(channelRepository, times(1)).findById(anyLong());
+            verifyNoMoreInteractions(channelRepository);
 
             verifyNoInteractions(feedClient);
+            verifyNoInteractions(feedEntryRepository);
         }
     }
 
@@ -125,14 +132,15 @@ class ChannelServiceTest extends AbstractSpringTest
         void create_ThrowsException_DuplicatedChannelException()
         {
             var channel = new Channel("name", "url", 0);
-            when(repository.findOneByUrl(anyString())).thenReturn(Optional.of(channel));
+            when(channelRepository.findOneByUrl(anyString())).thenReturn(Optional.of(channel));
 
             assertThrows(DuplicatedChannelException.class, () -> service.create(channel));
 
-            verify(repository, times(1)).findOneByUrl(anyString());
-            verifyNoMoreInteractions(repository);
+            verify(channelRepository, times(1)).findOneByUrl(anyString());
+            verifyNoMoreInteractions(channelRepository);
 
             verifyNoInteractions(feedClient);
+            verifyNoInteractions(feedEntryRepository);
         }
 
         @Test
@@ -141,16 +149,18 @@ class ChannelServiceTest extends AbstractSpringTest
         {
             var channel = new Channel("name", "url", 0);
 
-            when(repository.findOneByUrl(anyString())).thenReturn(Optional.empty());
+            when(channelRepository.findOneByUrl(anyString())).thenReturn(Optional.empty());
             when(feedClient.fetch(anyString())).thenThrow(InvalidChannelException.class);
 
             assertThrows(InvalidChannelException.class, () -> service.create(channel));
 
-            verify(repository, times(1)).findOneByUrl(anyString());
-            verifyNoMoreInteractions(repository);
+            verify(channelRepository, times(1)).findOneByUrl(anyString());
+            verifyNoMoreInteractions(channelRepository);
 
             verify(feedClient, times(1)).fetch(anyString());
-            verifyNoMoreInteractions(repository);
+            verifyNoMoreInteractions(channelRepository);
+
+            verifyNoInteractions(feedEntryRepository);
         }
 
         @Test
@@ -164,19 +174,21 @@ class ChannelServiceTest extends AbstractSpringTest
             var channel = new Channel(null, "url", 0);
             var completedChannel = new Channel(feed.getTitle(), channel.getUrl(), 0);
 
-            when(repository.findOneByUrl(anyString())).thenReturn(Optional.empty());
+            when(channelRepository.findOneByUrl(anyString())).thenReturn(Optional.empty());
             when(feedClient.fetch(anyString())).thenReturn(feed);
 
             var result = service.create(channel);
 
             assertEquals(completedChannel, result);
 
-            verify(repository, times(1)).findOneByUrl(anyString());
-            verify(repository, times(1)).save(completedChannel);
-            verifyNoMoreInteractions(repository);
+            verify(channelRepository, times(1)).findOneByUrl(anyString());
+            verify(channelRepository, times(1)).save(completedChannel);
+            verifyNoMoreInteractions(channelRepository);
 
             verify(feedClient, times(1)).fetch(anyString());
-            verifyNoMoreInteractions(repository);
+            verifyNoMoreInteractions(channelRepository);
+
+            verifyNoInteractions(feedEntryRepository);
         }
     }
 
@@ -191,14 +203,15 @@ class ChannelServiceTest extends AbstractSpringTest
             var channel = new Channel("name", "url", 0);
             channel.setId(1L);
 
-            when(repository.findById(channel.getId())).thenReturn(Optional.empty());
+            when(channelRepository.findById(channel.getId())).thenReturn(Optional.empty());
 
             assertThrows(ChannelNotFoundException.class, () -> service.update(channel.getId(), channel));
 
-            verify(repository, times(1)).findById(channel.getId());
-            verifyNoMoreInteractions(repository);
+            verify(channelRepository, times(1)).findById(channel.getId());
+            verifyNoMoreInteractions(channelRepository);
 
             verifyNoInteractions(feedClient);
+            verifyNoInteractions(feedEntryRepository);
         }
 
         @Test
@@ -208,15 +221,16 @@ class ChannelServiceTest extends AbstractSpringTest
             var channel = new Channel("name", "url", 0);
             channel.setId(1L);
 
-            when(repository.findById(channel.getId())).thenReturn(Optional.of(channel));
+            when(channelRepository.findById(channel.getId())).thenReturn(Optional.of(channel));
 
             service.update(channel.getId(), channel);
 
-            verify(repository, times(1)).findById(channel.getId());
-            verify(repository, times(1)).save(any());
-            verifyNoMoreInteractions(repository);
+            verify(channelRepository, times(1)).findById(channel.getId());
+            verify(channelRepository, times(1)).save(any());
+            verifyNoMoreInteractions(channelRepository);
 
             verifyNoInteractions(feedClient);
+            verifyNoInteractions(feedEntryRepository);
         }
     }
 
@@ -230,14 +244,15 @@ class ChannelServiceTest extends AbstractSpringTest
         {
             var channelId = 1L;
 
-            when(repository.existsById(channelId)).thenReturn(false);
+            when(channelRepository.existsById(channelId)).thenReturn(false);
 
             assertThrows(ChannelNotFoundException.class, () -> service.delete(channelId));
 
-            verify(repository, times(1)).existsById(channelId);
-            verifyNoMoreInteractions(repository);
+            verify(channelRepository, times(1)).existsById(channelId);
+            verifyNoMoreInteractions(channelRepository);
 
             verifyNoInteractions(feedClient);
+            verifyNoInteractions(feedEntryRepository);
         }
 
         @Test
@@ -246,32 +261,15 @@ class ChannelServiceTest extends AbstractSpringTest
         {
             var channelId = 1L;
 
-            when(repository.existsById(channelId)).thenReturn(true);
+            when(channelRepository.existsById(channelId)).thenReturn(true);
 
             service.delete(channelId);
 
-            verify(repository, times(1)).existsById(channelId);
-            verify(repository, times(1)).deleteById(channelId);
+            verify(channelRepository, times(1)).existsById(channelId);
+            verify(channelRepository, times(1)).deleteById(channelId);
+            verifyNoMoreInteractions(channelRepository);
 
-            verifyNoMoreInteractions(repository);
-
-            verifyNoInteractions(feedClient);
-        }
-    }
-
-    @Nested
-    @DisplayName("Test the updateRefreshTime() method")
-    class UpdateRefreshTime
-    {
-        @Test
-        void updateRefreshTime()
-        {
-            var channelId = 1L;
-
-            service.updateRefreshTime(channelId);
-
-            verify(repository, times(1)).updateRefreshTime(anyLong(), any(ZonedDateTime.class));
-            verifyNoMoreInteractions(repository);
+            verify(feedEntryRepository, times(1)).deleteAllByChannelIdIn(java.util.List.of(channelId));
 
             verifyNoInteractions(feedClient);
         }

@@ -1,10 +1,7 @@
 package com.assignment.aggregator.controllers;
 
-import com.assignment.aggregator.dto.FeedEntryDTO;
-import com.assignment.aggregator.mappers.IMapper;
+import com.assignment.aggregator.models.FeedEntry;
 import com.assignment.aggregator.services.IFeedService;
-import com.rometools.rome.feed.synd.SyndEntry;
-import com.rometools.rome.feed.synd.SyndEntryImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -12,7 +9,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockServletContext;
 
 import javax.servlet.ServletContext;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
@@ -27,9 +23,6 @@ class FeedControllerTest extends AbstractControllerTest
 
     @MockBean
     private IFeedService service;
-
-    @MockBean
-    private IMapper<SyndEntry, FeedEntryDTO> mapper;
 
     @Test
     public void testContext()
@@ -66,9 +59,6 @@ class FeedControllerTest extends AbstractControllerTest
 
             verify(service, times(1)).fetch(channelId, true);
             verifyNoMoreInteractions(service);
-
-            verify(mapper, times(1)).mapToDTO(List.of(), FeedEntryDTO.class);
-            verifyNoMoreInteractions(mapper);
         }
 
         @Test
@@ -76,13 +66,7 @@ class FeedControllerTest extends AbstractControllerTest
         {
             var channelId = 1L;
 
-            var entries = new ArrayList<SyndEntry>();
-            entries.add(new SyndEntryImpl());
-
-            var dto = List.of(new FeedEntryDTO());
-
-            when(service.fetch(anyLong(), anyBoolean())).thenReturn(entries);
-            when(mapper.mapToDTO(anyList(), eq(FeedEntryDTO.class))).thenReturn(dto);
+            when(service.fetch(anyLong(), anyBoolean())).thenReturn(List.of(new FeedEntry()));
 
             var result = mockMvc.perform(get("/feed/channel/{channelId}", channelId)
                                                  .param("forceRefresh", Boolean.TRUE.toString()))
@@ -96,9 +80,6 @@ class FeedControllerTest extends AbstractControllerTest
 
             verify(service, times(1)).fetch(channelId, true);
             verifyNoMoreInteractions(service);
-
-            verify(mapper, times(1)).mapToDTO(entries, FeedEntryDTO.class);
-            verifyNoMoreInteractions(mapper);
         }
     }
 
@@ -122,21 +103,12 @@ class FeedControllerTest extends AbstractControllerTest
 
             verify(service, times(1)).aggregate(true);
             verifyNoMoreInteractions(service);
-
-            verify(mapper, times(1)).mapToDTO(List.of(), FeedEntryDTO.class);
-            verifyNoMoreInteractions(service);
         }
 
         @Test
         void aggregate_ReturnsList() throws Exception
         {
-            var entries = new ArrayList<SyndEntry>();
-            entries.add(new SyndEntryImpl());
-
-            var dto = List.of(new FeedEntryDTO());
-
-            when(service.aggregate(anyBoolean())).thenReturn(entries);
-            when(mapper.mapToDTO(entries, FeedEntryDTO.class)).thenReturn(dto);
+            when(service.aggregate(anyBoolean())).thenReturn(List.of(new FeedEntry()));
 
             var result = mockMvc.perform(get("/feed/aggregate/")
                                                  .param("forceRefresh", Boolean.TRUE.toString()))
@@ -150,9 +122,6 @@ class FeedControllerTest extends AbstractControllerTest
 
             verify(service, times(1)).aggregate(true);
             verifyNoMoreInteractions(service);
-
-            verify(mapper, times(1)).mapToDTO(entries, FeedEntryDTO.class);
-            verifyNoMoreInteractions(mapper);
         }
     }
 }

@@ -5,31 +5,34 @@ This project is an implementation of a basic REST API for a web syndication aggr
 ### Context
 
 The user may subscribe to an arbitrary number of web syndication feeds (Channels) in any of the 
-most common formats: RSS1.0, RSS2.0 or ATOM). He or she may need to perform basic CRUD operations over 
+most common formats: RSS1.0, RSS2.0 or ATOM). The user can perform basic CRUD operations over 
 this channels, being able to subscribe (POST), edit (PUT), unsubscribe (DELETE) or fetch (GET) the 
-contents of the feed.
+contents of the channel's feed.
 
-Beside this channel operations, the user need to be able to perform an aggregation of the subscribed channels,
-having a personal feed with the available content among the subscribed channels.
+Beside the channel's CRUD operations, the user has to be able to fetch the channel's up to date feed to retrieve the 
+newly published entries. It is also possible to perform an aggregation of the subscribed channels,
+having a personal feed with the combined available content among all the subscribed channels.
 
 Channel subscriptions have a TTL to indicate how often the feed must be fetch for updates. When fetching or 
-aggregating channels, if a given channel's TTL has not yet expired, it won't be refreshed.
+aggregating channels, if a given channel's TTL has not yet expired, it won't be refreshed unless forced by the client.
  
  ### Prerequisites
  
  * JVM 11
  * JDK 11 when building from sources
  * Gradle 6 (A Gradle wrapper is provided with the project)
+ * Docker
  
  ### Stack
  
  * Java 11
  * Spring Boot 2.4.2
  * H2 Database
+ * MongoDB
  * JUnit5
  * Mockito
  * MockMVC
- * Rometools (Visit the [Project's git site](https://rometools.github.io/rome/))
+ * ROME tools (Visit the [Project's git site](https://rometools.github.io/rome/))
  
  ### Installation
  
@@ -37,55 +40,37 @@ aggregating channels, if a given channel's TTL has not yet expired, it won't be 
  
  * Download or clone the repository
  
-    git clone https://github.com/lusorio/feed-aggregator.git
-    
+        git clone https://github.com/lusorio/feed-aggregator.git
+            
  * Run it with Spring Boot
     
-    ./gradlew bootRun
+        ./gradlew bootRun
+        
+    **Note** thata local installation of MongoDB is needed in order to store the fetched entries
     
- #### Running in Docker
+    
+ ### Testing the application
+ 
+  `./gradlew test jacocoTestReport`
+    
+ ### Running in Docker
  
  A `Dockerfile` is provided with the project in order to build a Docker container.
  
  * Run `./gradlew build`. This will generate the application's `jar` file under `build/libs/*.jar"`
  
- * Run `docker build -t assignment/aggregator .` to build the Docker image. `assignment/aggreagator` is just a comodity tag name. Use whatever you like to name the application.
+ * In the project's root directory (where the Dockerfile file is located), run `docker build -t assignment/aggregator .` to build the Docker image. `assignment/aggreagator` is just a commodity tag name. Use whatever you like to name the application.
  
- * Run the container with `docker run -p 8080:8080 assignment/aggregator`
+ * Run the container with `docker run -p 8080:8080 assignment/aggregator` if a local installation of MongoDB is already present.
+ 
+ * Alternatively, use the provided `docker-compose` file. When in the project's root folder, execute
+ 
+        docker-compose up
+        
+    This will create and run two different containers running both the application's API and a MongoDB instance.
+        
  
  * The api will be accessible at htt://localhost:8080/api/. You can try to fetch the list of subscriptions with `curl GET http://localhost:8080/api/channel/`
-
-   
- ### Test the application
- 
- To run the test suite:
-        
-    gradle test
- 
- ### Architecture
- 
- #### Configuration
-  
-  A configuration file [application.properties](https://github.com/lusorio/feed-aggregator/blob/master/src/main/resources/application.properties) is provided in the src/main/resources directory.
-  
- #### Database and data access layer
- This projects uses an H2 embedded DB to keep track of the subscribed channels.
- 
- Hibernate is used through the Spring JPA framework in the data access layer, under the `repositories` package. Repositories
- handle the state of the entities represented in the `models` package.
- 
- #### Service layer
- 
- Domain logic sits under the `services` package.
- 
- The ROME library is used as a web syndication feed client. This library provides an easy way to fetch web feeds in a format
- agnostic way. It parses XML documents and builds a custom SyndFeed object which holds the feed values along with its entries,
- for every one of the most common formats (RSS1.0 and 2.0 families and ATOM)
- 
- #### API
- 
- The API exposes the aggregated feed as a JSON document. It uses a simplified model of the SyndEntryImpl.java class provided
- by Rome which holds only basic feed values.
  
  ### Usage
     
@@ -138,7 +123,6 @@ aggregating channels, if a given channel's TTL has not yet expired, it won't be 
   **Note:** 
   
   Subscription URLs can't be modified. Thus, a new subscription must be done if a new URL needs to be used.
-  
   
   #### Deleting a channel
   

@@ -1,6 +1,6 @@
 package com.assignment.aggregator.mappers;
 
-import com.assignment.aggregator.dto.FeedEntryDTO;
+import com.assignment.aggregator.models.FeedEntry;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndPerson;
 import org.slf4j.Logger;
@@ -8,13 +8,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.text.MessageFormat;
-import java.time.ZoneId;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
-public class FeedEntryMapper extends Mapper<SyndEntry, FeedEntryDTO>
+public class FeedEntryMapper extends Mapper<SyndEntry, FeedEntry>
 {
 
     private static final Logger logger = LoggerFactory.getLogger(FeedEntryMapper.class);
@@ -23,32 +22,32 @@ public class FeedEntryMapper extends Mapper<SyndEntry, FeedEntryDTO>
      * {@inheritDoc}
      * <p>
      * Converts a {@link SyndEntry}, which is the <code>rometools.rome</code> representation of a RSS/ATOM entry
-     * to a {@link FeedEntryDTO}
+     * to a {@link FeedEntry}
      */
     @Override
-    public FeedEntryDTO mapToDTO(SyndEntry source, Class<FeedEntryDTO> destinationType)
+    public FeedEntry mapToDTO(SyndEntry source, Class<FeedEntry> destinationType)
     {
-        if (logger.isInfoEnabled())
+        if (logger.isTraceEnabled())
         {
-            logger.info("Mapping SyndEntry to FeedEntryDTO");
+            logger.trace("Mapping SyndEntry to FeedEntry");
         }
 
-        var dto = new FeedEntryDTO();
+        var dto = new FeedEntry();
         dto.setLink(source.getLink());
         dto.setTitle(source.getTitle());
-        if (logger.isInfoEnabled())
+        if (logger.isTraceEnabled())
         {
-            logger.info(MessageFormat.format("Entry link set to: {0}", dto.getLink()));
-            logger.info(MessageFormat.format("Entry title set to: {0}", dto.getTitle()));
+            logger.trace(MessageFormat.format("Entry link set to: {0}", dto.getLink()));
+            logger.trace(MessageFormat.format("Entry title set to: {0}", dto.getTitle()));
         }
 
         var entryDate = source.getPublishedDate() != null ? source.getPublishedDate() : source.getUpdatedDate();
         if (entryDate != null)
         {
-            dto.setPublicationDate(entryDate.toInstant().atZone(ZoneId.systemDefault()));
-            if (logger.isInfoEnabled())
+            dto.setPublicationDate(entryDate.toInstant());
+            if (logger.isTraceEnabled())
             {
-                logger.info(MessageFormat.format("Entry publication date set to: {0}", dto.getPublicationDate()));
+                logger.trace(MessageFormat.format("Entry publication date set to: {0}", dto.getPublicationDate()));
             }
         }
 
@@ -60,9 +59,9 @@ public class FeedEntryMapper extends Mapper<SyndEntry, FeedEntryDTO>
 
             dto.getAuthors().addAll(authors);
 
-            if (logger.isInfoEnabled())
+            if (logger.isTraceEnabled())
             {
-                logger.info(MessageFormat.format("Adding feed authors to authors list: {0}", authors));
+                logger.trace(MessageFormat.format("Adding feed authors to authors list: {0}", authors));
             }
         }
 
@@ -74,9 +73,9 @@ public class FeedEntryMapper extends Mapper<SyndEntry, FeedEntryDTO>
 
             dto.getAuthors().addAll(contributors);
 
-            if (logger.isInfoEnabled())
+            if (logger.isTraceEnabled())
             {
-                logger.info(MessageFormat.format("Adding feed contributors to authors list: {0}", contributors));
+                logger.trace(MessageFormat.format("Adding feed contributors to authors list: {0}", contributors));
             }
         }
 
@@ -84,18 +83,18 @@ public class FeedEntryMapper extends Mapper<SyndEntry, FeedEntryDTO>
         {
             dto.getContents().add(source.getDescription());
 
-            if (logger.isInfoEnabled())
+            if (logger.isTraceEnabled())
             {
-                logger.info("Description found. Added to DTO contents");
+                logger.trace("Description found. Added to DTO contents");
             }
         }
 
         if (source.getContents() != null)
         {
             dto.getContents().addAll(source.getContents());
-            if (logger.isInfoEnabled())
+            if (logger.isTraceEnabled())
             {
-                logger.info("Contents found. Added to DTO contents");
+                logger.trace("Contents found. Added to DTO contents");
             }
         }
 
@@ -106,14 +105,14 @@ public class FeedEntryMapper extends Mapper<SyndEntry, FeedEntryDTO>
      * {@inheritDoc}
      * <p>
      * Converts a {@link List} of {@link SyndEntry}, which is the <code>rometools.rome</code> representation of a RSS/ATOM entry
-     * to a {@link FeedEntryDTO}
+     * to a {@link FeedEntry}
      */
     @Override
-    public List<FeedEntryDTO> mapToDTO(Collection<SyndEntry> source, Class<FeedEntryDTO> destinationType)
+    public List<FeedEntry> mapToDTO(Collection<SyndEntry> source, Class<FeedEntry> destinationType)
     {
-        if (logger.isInfoEnabled())
+        if (logger.isTraceEnabled())
         {
-            logger.info(MessageFormat.format("Mapping {0} SyndEntry to FeedEntryDTO list", source.size()));
+            logger.trace(MessageFormat.format("Mapping {0} SyndEntry to FeedEntry list", source.size()));
         }
 
         return source.stream()
